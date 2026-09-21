@@ -2,8 +2,13 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
+const providers = [
+  ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
+  ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET ? [GitHub] : []),
+];
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google, GitHub],
+  providers,
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token }) {

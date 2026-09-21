@@ -1,10 +1,16 @@
 import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 const styles = ["Вирусный", "Продающий", "Экспертный"] as const;
 type Style = (typeof styles)[number];
 
 export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Требуется авторизация." }, { status: 401 });
+  }
+
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json(
       { error: "Не задан GROQ_API_KEY. Добавьте ключ в .env.local и перезапустите сервер." },
@@ -22,6 +28,9 @@ export async function POST(request: Request) {
     }
 
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    // User ID is intentionally resolved on the server. It is ready to be stored
+    // with a generation when persistent storage is added.
+    const userId = session.user.id;
     let posts: string[] = [];
     // Иногда модель пропускает разделитель. Один повтор делает этот случай незаметным для пользователя.
     for (let attempt = 0; attempt < 2 && posts.length !== 3; attempt += 1) {
@@ -42,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     if (posts.length !== 3) throw new Error("Модель вернула неверный формат");
-    return NextResponse.json({ posts });
+    return NextResponse.json({ posts, userId });
   } catch (error) {
     const status = typeof error === "object" && error && "status" in error && typeof error.status === "number" ? error.status : 500;
     console.error("Generation error:", error);
