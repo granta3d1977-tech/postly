@@ -1,12 +1,14 @@
 import { Sparkles } from "lucide-react";
 import { AuthHeader } from "@/components/AuthHeader";
-import { auth } from "@/auth";
+import { auth, getGitHubCredentials, getGoogleCredentials } from "@/auth";
 import { signInWithGitHub, signInWithGoogle } from "./actions";
 
 export default async function LoginPage() {
   const session = await auth();
-  const hasGoogle = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
-  const hasGitHub = Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET);
+  const google = getGoogleCredentials();
+  const github = getGitHubCredentials();
+  const hasGoogle = Boolean(google.clientId && google.clientSecret);
+  const hasGitHub = Boolean(github.clientId && github.clientSecret);
 
   return <main className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-white">
     <div aria-hidden className="pointer-events-none absolute -left-64 -top-72 size-[42rem] rounded-full bg-violet-700/25 blur-[200px]" />
